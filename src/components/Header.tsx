@@ -1,7 +1,7 @@
 "use client"
 
 import { ConnectButton } from "@rainbow-me/rainbowkit"
-import { FaGithub } from "react-icons/fa"
+import { FaGithub } from "react-icons/fa" // import the github icon from react-icons
 import Image from "next/image"
 
 export default function Header() {
@@ -14,7 +14,7 @@ export default function Header() {
                 </a>
                 <a
                     href="https://github.com/cyfrin/TSender"
-                    target="_blank"
+                    target="_blank" // opens in a new tab
                     rel="noopener noreferrer"
                     className="p-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 transition-colors border-2 border-zinc-600 hover:border-zinc-500 cursor-alias hidden md:block"
                 >

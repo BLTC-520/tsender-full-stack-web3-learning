@@ -10,6 +10,7 @@ export default function HomeContent() {
 
     return (
         <main>
+            {/* <condition> ? if true : if false */}
             {!isConnected ? (
                 <div className="flex items-center justify-center">
                     <h2 className="text-xl font-medium text-zinc-600">

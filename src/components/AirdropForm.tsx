@@ -9,6 +9,7 @@ import {
     useWaitForTransactionReceipt,
     useReadContracts,
 } from "wagmi"
+// go wagmi docs to see how to use these hooks
 import { chainsToTSender, tsenderAbi, erc20Abi } from "@/constants"
 import { readContract } from "@wagmi/core"
 import { useConfig } from "wagmi"
@@ -29,7 +30,9 @@ export default function AirdropForm({ isUnsafeMode, onModeChange }: AirdropFormP
     const [amounts, setAmounts] = useState("")
     const config = useConfig()
     const account = useAccount()
-    const chainId = useChainId()
+    const chainId = useChainId() // get from the wagmi hooks, anytime user from frontend changes the chain, this will update (automatically)
+    // we define the abi ourself in the constants.ts file, use wagmi's useReadContracts to read multiple call at a single API call
+    // see the erc20Abi - line13 
     const { data: tokenData } = useReadContracts({
         contracts: [
             {
@@ -51,6 +54,7 @@ export default function AirdropForm({ isUnsafeMode, onModeChange }: AirdropFormP
         ],
     })
     const [hasEnoughTokens, setHasEnoughTokens] = useState(true)
+    // creating hasEnoughTokens to set true initially, setHasEnoughTokens is a function to update the state
 
     const { data: hash, isPending, error, writeContractAsync } = useWriteContract()
     const { isLoading: isConfirming, isSuccess: isConfirmed, isError } = useWaitForTransactionReceipt({
@@ -58,9 +62,11 @@ export default function AirdropForm({ isUnsafeMode, onModeChange }: AirdropFormP
         hash,
     })
 
-    const total: number = useMemo(() => calculateTotal(amounts), [amounts])
+    const total: number = useMemo(() => (calculateTotal(amounts)), [amounts])
+    // anytime the amounts change, we recalculate the total
+    // How useMemo works @note useMemo_Hook.svg in notes
 
-
+    
     async function handleSubmit() {
         const contractType = isUnsafeMode ? "no_check" : "tsender"
         const tSenderAddress = chainsToTSender[chainId][contractType]
@@ -71,14 +77,16 @@ export default function AirdropForm({ isUnsafeMode, onModeChange }: AirdropFormP
                 abi: erc20Abi,
                 address: tokenAddress as `0x${string}`,
                 functionName: "approve",
-                args: [tSenderAddress as `0x${string}`, BigInt(total)],
+                args: [tSenderAddress as `0x${string}`, BigInt(total)], // wrap with BigInt to avoid overflow
             })
+            // wait for the tx - waitForTransactionReceipt is a wagmi function that waits for the transaction to be mined
             const approvalReceipt = await waitForTransactionReceipt(config, {
                 hash: approvalHash,
             })
 
             console.log("Approval confirmed:", approvalReceipt)
 
+            // after approval, we can call the airdrop function
             await writeContractAsync({
                 abi: tsenderAbi,
                 address: tSenderAddress as `0x${string}`,
@@ -109,16 +117,19 @@ export default function AirdropForm({ isUnsafeMode, onModeChange }: AirdropFormP
     }
 
     async function getApprovedAmount(tSenderAddress: string | null): Promise<number> {
-        if (!tSenderAddress) {
+        if (!tSenderAddress) { 
             alert("This chain only has the safer version!")
             return 0
         }
+        // read from the chain to see if we approved 
         const response = await readContract(config, {
             abi: erc20Abi,
             address: tokenAddress as `0x${string}`,
             functionName: "allowance",
+            // who is getting the allowance to spend our tokens
             args: [account.address, tSenderAddress as `0x${string}`],
         })
+        // token.allowance(account, tsender) - backend looks like this, frontend looks above
         return response as number
     }
 
@@ -151,6 +162,8 @@ export default function AirdropForm({ isUnsafeMode, onModeChange }: AirdropFormP
         return isUnsafeMode ? "Send Tokens (Unsafe)" : "Send Tokens"
     }
 
+    // for the refreshing the page, we don't want to lose the state of the form
+    // so we save the state to localStorage and load it when the component mounts
     useEffect(() => {
         const savedTokenAddress = localStorage.getItem('tokenAddress')
         const savedRecipients = localStorage.getItem('recipients')
@@ -164,6 +177,7 @@ export default function AirdropForm({ isUnsafeMode, onModeChange }: AirdropFormP
     useEffect(() => {
         localStorage.setItem('tokenAddress', tokenAddress)
     }, [tokenAddress])
+    // whenever the tokenAddress changes, we save it to localStorage, same goes below
 
     useEffect(() => {
         localStorage.setItem('recipients', recipients)
@@ -174,6 +188,13 @@ export default function AirdropForm({ isUnsafeMode, onModeChange }: AirdropFormP
     }, [amounts])
 
     useEffect(() => {
+        // check got tokenAddress? is total > 0? and tokenData?.[2]?.result 
+        // tokenData?.[2]?.result 
+        // ? -> only access this if tokenData is not null or undefined
+        // [2] -> get the third element in the array, which is the balanceOf result
+        // .result -> get the result property of the object as type "number"
+
+        // if tokenAddress is not empty, total is greater than 0, and user has a balance
         if (tokenAddress && total > 0 && tokenData?.[2]?.result as number !== undefined) {
             const userBalance = tokenData?.[2].result as number;
             setHasEnoughTokens(userBalance >= total);
@@ -267,7 +288,7 @@ export default function AirdropForm({ isUnsafeMode, onModeChange }: AirdropFormP
                         </div>
                     </div>
                 )}
-
+                
                 <button
                     className={`cursor-pointer flex items-center justify-center w-full py-3 rounded-[9px] text-white transition-colors font-semibold relative border ${isUnsafeMode
                         ? "bg-red-500 hover:bg-red-600 border-red-500"
@@ -282,7 +303,7 @@ export default function AirdropForm({ isUnsafeMode, onModeChange }: AirdropFormP
                     <div className="absolute w-full inset-0 mix-blend-overlay z-10 inner-shadow rounded-lg" />
                     {/* White inner border */}
                     <div className="absolute w-full inset-0 mix-blend-overlay z-10 border-[1.5px] border-white/20 rounded-lg" />
-                    {isPending || error || isConfirming
+                    {isPending || error || isConfirming 
                         ? getButtonContent()
                         : !hasEnoughTokens && tokenAddress
                             ? "Insufficient token balance"

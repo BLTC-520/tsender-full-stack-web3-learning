@@ -1,0 +1,30 @@
+create a unit test file with AI 
+- tell AI, going to use 'vitest', and want to be in the samedir 
+- pnpm add -D vite-tsconfig-paths
+- vitest.config.mts file 
+- package.json to add the line -> "test:unit": "vitest",
+- pnpm run test:unit
+
+usually in the utils file, will put the index.ts 
+- use for exporting 
+- from other place just import from "@/utils"
+
+- tryout 
+
+- add a favourite address list and amount, that can do straight transfer with just pressing a button
+
+
+E2E testing basics (end to end testing)
+- validate the whole process from start to finish 
+- unit test -> a single function 
+
+when the user not connected, won't show 
+- show the airdrop form only if the user is connected with wallet 
+- HomeContent file 
+- wagmi hook -> useAccount()
+- synpress (e2e testing framework)
+- test on when we connected (show form), if not show (connect wallet)
+
+pnpm create playwright@latest
+pnpm exec playwright test
+

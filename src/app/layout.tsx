@@ -1,7 +1,7 @@
 import "./globals.css"
 import type { Metadata } from "next"
 import { type ReactNode } from "react"
-import Header from "@/components/Header"
+import Header from "@/components/Header" // with this and wrapping the header in the layout, can use in every page
 import { Providers } from "./providers"
 
 export const metadata: Metadata = {
@@ -9,6 +9,8 @@ export const metadata: Metadata = {
     description: "Hyper gas-optimized bulk ERC20 token transfer",
 }
 
+// everything starting from the layout page 
+// if we not doing wrapping, then we will have to import the header in every page
 export default function RootLayout(props: { children: ReactNode }) {
     return (
         <html lang="en">
